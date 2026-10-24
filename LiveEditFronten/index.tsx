@@ -14,11 +14,17 @@ if (!rootElement) {
 
 const endpoint = import.meta.env.VITE_LOGTO_ENDPOINT;
 const appId = import.meta.env.VITE_LOGTO_APP_ID;
+const isE2eMode = import.meta.env.MODE === 'e2e';
+const logtoConfig = {
+  endpoint: endpoint || 'https://logto.invalid/oidc',
+  appId: appId || 'playwright-e2e',
+  scopes: ['email'],
+};
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    {endpoint && appId ? (
-      <LogtoProvider config={{ endpoint, appId, scopes: ['email'] }}>
+    {(endpoint && appId) || isE2eMode ? (
+      <LogtoProvider config={logtoConfig}>
         <ThemeProvider>
           <ToastProvider>
             {window.location.pathname === '/callback' ? <LogtoCallback /> : <App />}

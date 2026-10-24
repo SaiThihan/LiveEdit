@@ -11,6 +11,8 @@ yarn-debug.log
 .npm
 dist/
 build/
+playwright-report/
+test-results/
 
 # Python
 __pycache__/
