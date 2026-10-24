@@ -3,7 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { ThemeProvider } from './context/ThemeContext';
-import ThemeToggle from './components/ThemeToggle';
+import { ToastProvider } from './context/ToastContext';
 import { LogtoProvider } from '@logto/react';
 import LogtoCallback from './components/LogtoCallback';
 
@@ -17,22 +17,18 @@ const appId = import.meta.env.VITE_LOGTO_APP_ID;
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <ThemeProvider>
-      {endpoint && appId ? (
-        <LogtoProvider config={{ endpoint, appId, scopes: ['email'] }}>
-          {window.location.pathname === '/callback' ? (
-            <>
-              <div className="fixed right-4 top-4 z-[100]"><ThemeToggle /></div>
-              <LogtoCallback />
-            </>
-          ) : <App />}
-        </LogtoProvider>
-      ) : (
-        <div className="relative min-h-screen bg-[#050505] text-white flex items-center justify-center p-6 text-center">
-          <div className="absolute right-4 top-4 z-[100]"><ThemeToggle /></div>
-          <p>Configure VITE_LOGTO_ENDPOINT and VITE_LOGTO_APP_ID to enable Google sign-in.</p>
-        </div>
-      )}
-    </ThemeProvider>
+    {endpoint && appId ? (
+      <LogtoProvider config={{ endpoint, appId, scopes: ['email'] }}>
+        <ThemeProvider>
+          <ToastProvider>
+            {window.location.pathname === '/callback' ? <LogtoCallback /> : <App />}
+          </ToastProvider>
+        </ThemeProvider>
+      </LogtoProvider>
+    ) : (
+      <div className="min-h-screen bg-[#050505] text-white flex items-center justify-center p-6 text-center">
+        <p>Configure VITE_LOGTO_ENDPOINT and VITE_LOGTO_APP_ID to enable Google sign-in.</p>
+      </div>
+    )}
   </React.StrictMode>
 );
