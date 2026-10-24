@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLogto } from '@logto/react';
 import { AppMode, MediaAsset } from './types';
-import { useTheme } from './context/ThemeContext';
 import ChatInterface from './components/ChatInterface';
 import LiveInterface from './components/LiveInterface';
 import VideoGenerator from './components/VideoGenerator';
@@ -15,6 +14,7 @@ import { PaymentModal } from './components/PaymentModal';
 import { useSubscription } from './hooks/useSubscription';
 import ProjectsView from './components/ProjectsView';
 import WorkflowCanvas from './components/WorkflowCanvas';
+import ThemeToggle from './components/ThemeToggle';
 import { apiFetch, requireBackendUrl, setAuthTokenGetter } from './services/api';
 
 declare global {
@@ -43,7 +43,6 @@ const App: React.FC = () => {
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
 
   const { subscription } = useSubscription(userEmail);
-  const { theme, toggleTheme } = useTheme();
   const { isLoading, isAuthenticated, getIdToken, signOut } = useLogto();
 
   useEffect(() => {
@@ -227,8 +226,8 @@ const App: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen editor-bg text-neutral-300 overflow-hidden">
-      <header className="h-12 border-b border-neutral-800 bg-[#111] flex items-center justify-between px-4 z-50 shrink-0">
-        <div className="flex items-center gap-6">
+      <header className="relative z-50 flex min-h-12 shrink-0 flex-wrap items-center justify-between gap-y-1 border-b border-neutral-800 bg-[#111] px-2 py-1 sm:px-4 md:flex-nowrap">
+        <div className="flex w-full min-w-0 items-center gap-2 md:w-auto md:gap-6">
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 rounded bg-[#00ff41] flex items-center justify-center">
               <i className="fas fa-play text-[10px] text-black"></i>
@@ -236,7 +235,7 @@ const App: React.FC = () => {
             <h1 className="text-sm font-bold tracking-tight uppercase text-white">Live Edit <span className="text-[#00ff41]">v2.5</span></h1>
           </div>
 
-          <nav className="flex items-center">
+          <nav className="flex min-w-0 flex-1 items-center overflow-x-auto md:flex-none">
             {[
               { id: AppMode.CHAT, label: 'Chat', icon: 'fa-message' },
               { id: AppMode.LIVE, label: 'Live AI', icon: 'fa-bolt' },
@@ -246,7 +245,7 @@ const App: React.FC = () => {
               <button
                 key={item.id}
                 onClick={() => handleModeChange(item.id)}
-                className={`px-4 h-12 text-[11px] font-bold uppercase tracking-widest border-x border-transparent transition-all ${
+                className={`h-10 shrink-0 px-2 text-[10px] font-bold uppercase tracking-widest border-x border-transparent transition-all sm:px-3 sm:text-[11px] md:h-12 md:px-4 ${
                   mode === item.id
                     ? 'bg-[#1a1a1a] text-white border-neutral-800 border-b-2 border-b-[#00ff41]'
                     : 'text-neutral-500 hover:text-neutral-300 hover:bg-[#1a1a1a]'
@@ -259,12 +258,12 @@ const App: React.FC = () => {
           </nav>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-2 py-0.5 rounded bg-neutral-900 text-[10px] border border-neutral-800 font-mono">
+        <div className="flex w-full items-center justify-end gap-2 overflow-x-auto md:w-auto md:gap-3">
+          <div className="flex shrink-0 items-center gap-2 rounded border border-neutral-800 bg-neutral-900 px-2 py-0.5 font-mono text-[10px]">
             <span className="text-[8px] text-neutral-500">USER:</span>
             <span className="text-[10px] text-neutral-300 max-w-[120px] truncate">{userEmail}</span>
           </div>
-          <div className="flex items-center gap-2 px-2 py-0.5 rounded bg-neutral-900 text-[10px] border border-neutral-800 font-mono">
+          <div className="flex shrink-0 items-center gap-2 rounded border border-neutral-800 bg-neutral-900 px-2 py-0.5 font-mono text-[10px]">
             <span className={`w-1.5 h-1.5 rounded-full ${
               subscription?.status === 'active' ? 'bg-[#00ff41]' : 'bg-orange-500'
             }`}></span>
@@ -272,23 +271,17 @@ const App: React.FC = () => {
           </div>
           <button
             onClick={() => setShowSubscriptionPlans(true)}
-            className="px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest text-neutral-500 hover:text-[#00ff41] transition-all border border-neutral-800 hover:border-[#00ff41]"
+            className="shrink-0 border border-neutral-800 px-2 py-1.5 text-[9px] font-bold uppercase tracking-widest text-neutral-500 transition-all hover:border-[#00ff41] hover:text-[#00ff41] sm:px-3"
           >
             {subscription?.status === 'active' ? 'Manage' : 'Upgrade'}
           </button>
           <button
             onClick={handleLogout}
-            className="px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest text-neutral-500 hover:text-[#00ff41] transition-all border border-neutral-800 hover:border-[#00ff41]"
+            className="shrink-0 border border-neutral-800 px-2 py-1.5 text-[9px] font-bold uppercase tracking-widest text-neutral-500 transition-all hover:border-[#00ff41] hover:text-[#00ff41] sm:px-3"
           >
             Logout
           </button>
-          <button
-            onClick={toggleTheme}
-            className="px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest text-neutral-500 hover:text-[#00ff41] transition-all border border-neutral-800 hover:border-[#00ff41]"
-            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-          >
-            {theme === 'dark' ? '☀' : '☾'}
-          </button>
+          <ThemeToggle />
         </div>
       </header>
 

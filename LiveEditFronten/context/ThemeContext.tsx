@@ -11,16 +11,22 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>(() => {
-    // Get from localStorage or default to dark
-    const saved = localStorage.getItem('app-theme');
-    return (saved as Theme) || 'dark';
+    try {
+      const saved = localStorage.getItem('app-theme');
+      return saved === 'light' || saved === 'dark' ? saved : 'dark';
+    } catch (error) {
+      console.warn('Unable to read the saved theme preference:', error);
+      return 'dark';
+    }
   });
 
   useEffect(() => {
-    // Save to localStorage
-    localStorage.setItem('app-theme', theme);
-    // Update document class
     document.documentElement.setAttribute('data-theme', theme);
+    try {
+      localStorage.setItem('app-theme', theme);
+    } catch (error) {
+      console.warn('Unable to save the theme preference:', error);
+    }
   }, [theme]);
 
   const toggleTheme = () => {
