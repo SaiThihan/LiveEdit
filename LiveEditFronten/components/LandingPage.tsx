@@ -31,10 +31,22 @@ const gradients = [
 
 const githubRepositoryUrl = 'https://github.com/clencyc/LiveEdit';
 const githubRepositoryApiUrl = 'https://api.github.com/repos/clencyc/LiveEdit';
+const githubContributorsApiUrl = `${githubRepositoryApiUrl}/contributors?per_page=100`;
+const contributorCardsPerPage = 6;
+const founderCardsOnFirstPage = 1;
+
+interface GithubContributor {
+  login: string;
+  avatar_url: string;
+  html_url: string;
+  contributions: number;
+}
 
 const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
   const [index, setIndex] = useState(0);
   const [githubStars, setGithubStars] = useState<number | null>(null);
+  const [contributors, setContributors] = useState<GithubContributor[] | null>(null);
+  const [contributorPage, setContributorPage] = useState(0);
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -70,11 +82,65 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
     return () => controller.abort();
   }, []);
 
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadGithubContributors = async () => {
+      try {
+        const response = await fetch(githubContributorsApiUrl, {
+          headers: { Accept: 'application/vnd.github+json' },
+          signal: controller.signal,
+        });
+        if (!response.ok) {
+          throw new Error(`GitHub returned ${response.status}`);
+        }
+
+        const data: unknown = await response.json();
+        if (!Array.isArray(data)) {
+          throw new Error('GitHub returned an invalid contributors list');
+        }
+
+        const validContributors = data.filter((contributor): contributor is GithubContributor => (
+          typeof contributor?.login === 'string' &&
+          typeof contributor?.avatar_url === 'string' &&
+          typeof contributor?.html_url === 'string' &&
+          typeof contributor?.contributions === 'number'
+        ));
+        setContributors(validContributors);
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          console.error('Unable to load GitHub contributors:', error);
+          setContributors([]);
+        }
+      }
+    };
+
+    void loadGithubContributors();
+    return () => controller.abort();
+  }, []);
+
   const slide = slides[index];
   const gradient = gradients[index];
   const formattedGithubStars = githubStars === null
     ? '—'
     : new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(githubStars);
+  const communityContributors = contributors?.filter(
+    (contributor) => contributor.login.toLowerCase() !== 'clencyc'
+  ).sort((first, second) => (
+    second.contributions - first.contributions ||
+    first.login.localeCompare(second.login)
+  )) ?? [];
+  const contributorPageCount = contributors === null
+    ? 1
+    : Math.ceil((founderCardsOnFirstPage + communityContributors.length) / contributorCardsPerPage);
+  const firstContributorIndex = contributorPage === 0
+    ? 0
+    : contributorCardsPerPage - founderCardsOnFirstPage +
+      (contributorPage - 1) * contributorCardsPerPage;
+  const visibleContributors = communityContributors.slice(
+    firstContributorIndex,
+    firstContributorIndex + contributorCardsPerPage - (contributorPage === 0 ? founderCardsOnFirstPage : 0)
+  );
 
   return (
     <div className="min-h-screen bg-[#050505] text-white overflow-hidden relative pb-24">
@@ -191,24 +257,85 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
             </div>
             <h2 className="text-4xl font-bold text-white mb-3">Contributors Hall of Fame</h2>
             <p className="text-neutral-400 text-sm uppercase tracking-[0.25em]">People shaping the next iteration of Live Edit</p>
+            <p className="mt-3 text-xs text-neutral-500">
+              Community contributors are listed automatically from commits on the default branch.
+            </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              { name: 'C.Christine', role: 'Founder & creative technologist', blurb: 'Built the initial prototype, creative direction, and product vision.' },
-              { name: 'Community Beta Testers', role: 'Early adopters', blurb: 'Feedback from real editors helped shape the editing workflow and prompt system.' },
-              { name: 'Open contributors', role: 'Design + engineering', blurb: 'Future collaborators and builders who help improve the product and writing.' },
-            ].map((person, i) => (
-              <div key={i} className="rounded-xl border border-neutral-800 bg-white/[0.03] p-5 hover:border-[#00ff41] transition-all">
-                <div className="w-12 h-12 rounded-full bg-[#00ff41] text-black font-bold flex items-center justify-center mb-4 shadow-[0_0_30px_rgba(0,255,65,0.25)]">
-                  {person.name.split(' ').map((part) => part[0]).slice(0, 2).join('').toUpperCase()}
-                </div>
-                <div className="text-lg font-semibold text-white">{person.name}</div>
-                <div className="mt-1 text-[11px] uppercase tracking-[0.2em] text-[#00ff41]">{person.role}</div>
-                <p className="mt-4 text-sm text-neutral-400 leading-relaxed">{person.blurb}</p>
+          <div
+            data-testid="contributors-grid"
+            className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+          >
+            {contributorPage === 0 && (
+              <div className="rounded-xl border border-neutral-800 bg-white/[0.03] p-5 transition-all hover:border-[#00ff41]">
+                <img
+                  src="https://github.com/clencyc.png"
+                  alt=""
+                  className="mb-4 h-12 w-12 rounded-full border border-[#00ff41] object-cover shadow-[0_0_30px_rgba(0,255,65,0.25)]"
+                />
+                <div className="text-lg font-semibold text-white">C.Christine</div>
+                <div className="mt-1 text-[11px] uppercase tracking-[0.2em] text-[#00ff41]">Founder &amp; creative technologist</div>
+                <p className="mt-4 text-sm leading-relaxed text-neutral-400">
+                  Built the initial prototype, creative direction, and product vision.
+                </p>
               </div>
+            )}
+
+            {visibleContributors.map((contributor) => (
+              <a
+                key={contributor.login}
+                href={contributor.html_url}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-xl border border-neutral-800 bg-white/[0.03] p-5 transition-all hover:border-[#00ff41]"
+                aria-label={`${contributor.login}, ${contributor.contributions} commits to LiveEdit`}
+              >
+                <img
+                  src={contributor.avatar_url}
+                  alt=""
+                  className="mb-4 h-12 w-12 rounded-full border border-neutral-700 object-cover"
+                  loading="lazy"
+                />
+                <div className="text-lg font-semibold text-white">{contributor.login}</div>
+                <div className="mt-1 text-[11px] uppercase tracking-[0.2em] text-[#00ff41]">GitHub contributor</div>
+                <p className="mt-4 text-sm leading-relaxed text-neutral-400">
+                  {contributor.contributions} {contributor.contributions === 1 ? 'commit' : 'commits'} on the default branch.
+                </p>
+              </a>
             ))}
+
+            {contributors === null && (
+              <p role="status" className="text-sm text-neutral-400">Loading GitHub contributors…</p>
+            )}
+            {contributors !== null && communityContributors.length === 0 && (
+              <p className="text-sm text-neutral-400">
+                No additional GitHub contributors are listed yet.
+              </p>
+            )}
           </div>
+          {contributorPageCount > 1 && (
+            <nav className="mt-8 flex items-center justify-center gap-4" aria-label="Contributor pages">
+              <button
+                type="button"
+                onClick={() => setContributorPage((page) => Math.max(0, page - 1))}
+                disabled={contributorPage === 0}
+                className="rounded border border-neutral-700 px-4 py-2 text-sm text-neutral-300 transition-colors hover:border-[#00ff41] hover:text-[#00ff41] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Previous
+              </button>
+              <span aria-live="polite" className="text-sm text-neutral-400">
+                Page {contributorPage + 1} of {contributorPageCount}
+              </span>
+              <button
+                type="button"
+                onClick={() => setContributorPage((page) => Math.min(contributorPageCount - 1, page + 1))}
+                disabled={contributorPage === contributorPageCount - 1}
+                className="rounded border border-neutral-700 px-4 py-2 text-sm text-neutral-300 transition-colors hover:border-[#00ff41] hover:text-[#00ff41] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Next
+              </button>
+            </nav>
+          )}
         </div>
       </section>
 
