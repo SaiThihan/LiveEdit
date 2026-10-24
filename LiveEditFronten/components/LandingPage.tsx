@@ -116,7 +116,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
             </nav>
 
             <div className="ml-auto flex max-w-full flex-wrap items-center justify-end gap-2 sm:gap-3">
-              <ThemeToggle />
               <button
                 onClick={onStart}
                 className="hidden bg-[#00ff41] px-3 py-2 text-[9px] font-bold uppercase tracking-[0.18em] text-black shadow-[0_10px_40px_rgba(0,255,65,0.45)] transition-all hover:bg-[#00e03a] sm:inline-flex sm:px-4 sm:text-[10px] sm:tracking-[0.25em]"
