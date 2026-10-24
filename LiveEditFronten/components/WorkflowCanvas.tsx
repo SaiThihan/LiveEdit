@@ -92,6 +92,7 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ projectId, onBack }) =>
   const [showVideoIngestion, setShowVideoIngestion] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedVideos, setGeneratedVideos] = useState<Array<{id: string; url: string; name: string; timestamp: Date}>>([]);
+  const [isGeneratedVideosCollapsed, setIsGeneratedVideosCollapsed] = useState(false);
   const [generationProgress, setGenerationProgress] = useState('');
   const [selectedDirectorNodeId, setSelectedDirectorNodeId] = useState('');
   const [directorPrompt, setDirectorPrompt] = useState('Keep the strongest highlights, preserve narrative flow, and prefer energetic moments.');
@@ -716,67 +717,99 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ projectId, onBack }) =>
       <div className="flex-1 flex min-h-0 overflow-hidden">
 
       {/* Left Sidebar - Generated Videos */}
-      <div className="w-80 border-r border-neutral-800 bg-[#111] flex flex-col overflow-hidden">
-        <div className="px-4 py-3 border-b border-neutral-800 flex items-center gap-3">
-          <i className="fas fa-film text-[#00ff41]"></i>
-          <h3 className="text-sm font-bold uppercase tracking-wide text-white">Generated Videos</h3>
-          <span className="ml-auto text-[9px] px-2 py-0.5 bg-[#00ff41]/20 text-[#00ff41] rounded-full uppercase tracking-wider font-bold">
-            {generatedVideos.length}
-          </span>
-        </div>
-
-        {generationProgress && (
-          <div className="px-4 py-3 bg-yellow-600/20 border-b border-yellow-600/30">
-            <div className="flex items-center gap-2 text-yellow-400 text-xs">
-              <i className="fas fa-spinner fa-spin"></i>
-              <span>{generationProgress}</span>
+      <aside className={`${isGeneratedVideosCollapsed ? 'w-12 min-w-12' : 'w-80 min-w-80'} border-r border-neutral-800 bg-[#111] flex flex-col overflow-hidden`}>
+        {isGeneratedVideosCollapsed ? (
+          <button
+            type="button"
+            onClick={() => setIsGeneratedVideosCollapsed(false)}
+            aria-label="Expand Generated Videos"
+            aria-expanded={false}
+            title="Expand Generated Videos"
+            className="flex flex-col items-center gap-3 py-3 text-[#00ff41] hover:text-white transition-colors"
+          >
+            <i className="fas fa-chevron-right text-xs" aria-hidden="true"></i>
+            <i className="fas fa-film" aria-hidden="true"></i>
+            <span className="[writing-mode:vertical-rl] text-[10px] font-bold uppercase tracking-widest">
+              Videos
+            </span>
+            <span className="text-[9px] px-1.5 py-0.5 bg-[#00ff41]/20 rounded-full">
+              {generatedVideos.length}
+            </span>
+          </button>
+        ) : (
+          <>
+            <div className="px-4 py-3 border-b border-neutral-800 flex items-center gap-3">
+              <i className="fas fa-film text-[#00ff41]"></i>
+              <h3 className="text-sm font-bold uppercase tracking-wide text-white">Generated Videos</h3>
+              <span className="text-[9px] px-2 py-0.5 bg-[#00ff41]/20 text-[#00ff41] rounded-full uppercase tracking-wider font-bold">
+                {generatedVideos.length}
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsGeneratedVideosCollapsed(true)}
+                aria-label="Collapse Generated Videos"
+                aria-expanded={true}
+                title="Collapse Generated Videos"
+                className="ml-auto text-neutral-400 hover:text-white transition-colors"
+              >
+                <i className="fas fa-chevron-left" aria-hidden="true"></i>
+              </button>
             </div>
-          </div>
-        )}
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          {generatedVideos.length === 0 ? (
-            <div className="text-center py-12 text-neutral-600">
-              <i className="fas fa-video text-4xl mb-3 block"></i>
-              <p className="text-sm">No videos generated yet</p>
-              <p className="text-[9px] mt-2 text-neutral-700">Upload videos in canvas nodes,<br/>then click "Create Video"</p>
-            </div>
-          ) : (
-            generatedVideos.map(video => (
-              <div key={video.id} className="bg-neutral-900 rounded-lg border border-neutral-800 overflow-hidden hover:border-neutral-700 transition-all">
-                <video
-                  src={video.url}
-                  controls
-                  className="w-full h-40 bg-black"
-                />
-                <div className="p-3">
-                  <div className="text-white text-xs font-bold mb-1 truncate">{video.name}</div>
-                  <div className="text-neutral-500 text-[9px]">
-                    {video.timestamp.toLocaleTimeString()}
-                  </div>
-                  <div className="flex gap-2 mt-2">
-                    <a
-                      href={video.url}
-                      download={video.name}
-                      className="flex-1 px-2 py-1 bg-[#00ff41] text-black text-[9px] font-bold uppercase rounded hover:bg-[#00dd35] text-center transition-all"
-                    >
-                      <i className="fas fa-download mr-1"></i> Download
-                    </a>
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(video.url);
-                      }}
-                      className="px-2 py-1 bg-neutral-800 text-neutral-400 text-[9px] font-bold uppercase rounded hover:bg-neutral-700 transition-all"
-                    >
-                      <i className="fas fa-copy"></i>
-                    </button>
-                  </div>
+            {generationProgress && (
+              <div className="px-4 py-3 bg-yellow-600/20 border-b border-yellow-600/30">
+                <div className="flex items-center gap-2 text-yellow-400 text-xs">
+                  <i className="fas fa-spinner fa-spin"></i>
+                  <span>{generationProgress}</span>
                 </div>
               </div>
-            ))
-          )}
-        </div>
-      </div>
+            )}
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {generatedVideos.length === 0 ? (
+                <div className="text-center py-12 text-neutral-600">
+                  <i className="fas fa-video text-4xl mb-3 block"></i>
+                  <p className="text-sm">No videos generated yet</p>
+                  <p className="text-[9px] mt-2 text-neutral-700">Upload videos in canvas nodes,<br/>then click "Create Video"</p>
+                </div>
+              ) : (
+                generatedVideos.map(video => (
+                  <div key={video.id} className="bg-neutral-900 rounded-lg border border-neutral-800 overflow-hidden hover:border-neutral-700 transition-all">
+                    <video
+                      src={video.url}
+                      controls
+                      className="w-full h-40 bg-black"
+                    />
+                    <div className="p-3">
+                      <div className="text-white text-xs font-bold mb-1 truncate">{video.name}</div>
+                      <div className="text-neutral-500 text-[9px]">
+                        {video.timestamp.toLocaleTimeString()}
+                      </div>
+                      <div className="flex gap-2 mt-2">
+                        <a
+                          href={video.url}
+                          download={video.name}
+                          className="flex-1 px-2 py-1 bg-[#00ff41] text-black text-[9px] font-bold uppercase rounded hover:bg-[#00dd35] text-center transition-all"
+                        >
+                          <i className="fas fa-download mr-1"></i> Download
+                        </a>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(video.url);
+                          }}
+                          className="px-2 py-1 bg-neutral-800 text-neutral-400 text-[9px] font-bold uppercase rounded hover:bg-neutral-700 transition-all"
+                        >
+                          <i className="fas fa-copy"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </>
+        )}
+      </aside>
 
       {/* Canvas */}
       <div className="flex-1 relative min-h-0">
