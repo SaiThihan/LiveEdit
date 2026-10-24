@@ -18,6 +18,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { nodeTypes } from './WorkflowNodes';
 import DirectorChatPanel from './DirectorChatPanel';
 import type { Scene } from '../services/videoIngestion';
+import { useToast } from '../context/ToastContext';
 
 interface WorkflowCanvasProps {
   projectId: string;
@@ -83,6 +84,7 @@ const buildStarterWorkflow = (projectId: string): { nodes: Node[]; edges: Edge[]
 };
 
 const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ projectId, onBack }) => {
+  const { showToast } = useToast();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [isVoiceActive, setIsVoiceActive] = useState(false);
@@ -304,7 +306,7 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ projectId, onBack }) =>
       setDirectorPrompt('');
       setGenerationProgress('');
     } catch (error: any) {
-      alert(`Director chat failed: ${error.message}`);
+      showToast(`Director chat failed: ${error.message}`, 'error');
       setGenerationProgress('');
     } finally {
       setDirectorBusy(false);
@@ -339,7 +341,7 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ projectId, onBack }) =>
       });
       setGenerationProgress('');
     } catch (error: any) {
-      alert(`Plan generation failed: ${error.message}`);
+      showToast(`Plan generation failed: ${error.message}`, 'error');
       setGenerationProgress('');
     } finally {
       setDirectorBusy(false);
@@ -402,7 +404,7 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ projectId, onBack }) =>
 
   const toggleVoice = () => {
     if (!recognitionRef.current) {
-      alert('Speech recognition is not supported in your browser.');
+      showToast('Speech recognition is not supported in your browser.', 'error');
       return;
     }
 
@@ -523,7 +525,7 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ projectId, onBack }) =>
       const uploadNodes = nodes.filter(n => n.type === 'upload' && n.data.videoFile);
       
       if (uploadNodes.length === 0) {
-        alert('Please upload at least one video in an upload node');
+        showToast('Please upload at least one video in an upload node', 'error');
         return;
       }
 
@@ -622,7 +624,7 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ projectId, onBack }) =>
       setGenerationProgress('Complete!');
       setTimeout(() => setGenerationProgress(''), 2000);
     } catch (error: any) {
-      alert(`Video generation failed: ${error.message}`);
+      showToast(`Video generation failed: ${error.message}`, 'error');
       setGenerationProgress('');
     } finally {
       setIsGenerating(false);

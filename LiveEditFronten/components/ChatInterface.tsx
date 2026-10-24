@@ -4,6 +4,7 @@ import { getAiClient, chatWithBackend, analyzeVideoWithBackend, editVideoWithBac
 import { ChatMessage, MediaAsset } from '../types';
 import CreativePulse from './CreativePulse';
 import { apiFetch, requireBackendUrl } from '../services/api';
+import { useToast } from '../context/ToastContext';
 
 interface ChatInterfaceProps {
   onAddAsset: (asset: MediaAsset) => void
@@ -26,6 +27,7 @@ const toPlainText = (text: string) => {
 };
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ onAddAsset }) => {
+  const { showToast } = useToast();
   const [audioLibrary, setAudioLibrary] = useState<Array<{id: string; label: string; filename: string; note: string}>>([]);
 
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -127,7 +129,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onAddAsset }) => {
 
   const handleImportAudio = async () => {
     if (!importUrl.trim() || !importName.trim()) {
-      alert('URL and name are required');
+      showToast('URL and name are required', 'error');
       return;
     }
 
@@ -171,7 +173,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onAddAsset }) => {
       }]);
     } catch (error: any) {
       console.error('Import error:', error);
-      alert(`Failed to import: ${error.message}`);
+      showToast(`Failed to import: ${error.message}`, 'error');
     } finally {
       setIsImporting(false);
     }

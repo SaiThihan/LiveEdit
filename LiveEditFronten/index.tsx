@@ -3,6 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { ThemeProvider } from './context/ThemeContext';
+import { ToastProvider } from './context/ToastContext';
 import { LogtoProvider } from '@logto/react';
 import LogtoCallback from './components/LogtoCallback';
 
@@ -19,7 +20,9 @@ root.render(
     {endpoint && appId ? (
       <LogtoProvider config={{ endpoint, appId, scopes: ['email'] }}>
         <ThemeProvider>
-          {window.location.pathname === '/callback' ? <LogtoCallback /> : <App />}
+          <ToastProvider>
+            {window.location.pathname === '/callback' ? <LogtoCallback /> : <App />}
+          </ToastProvider>
         </ThemeProvider>
       </LogtoProvider>
     ) : (
