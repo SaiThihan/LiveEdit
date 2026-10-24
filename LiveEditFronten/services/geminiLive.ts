@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, type GenerateContentResponse } from '@google/genai';
 
 interface GeminiLiveConfig {
   apiKey: string;
@@ -9,10 +9,10 @@ interface GeminiLiveConfig {
 }
 
 export class GeminiLiveService {
-  private genAI: GoogleGenAI | null = null;
-  private model: any = null;
+  private genAI: GoogleGenAI;
+  private isInitialized = false;
   private isProcessing: boolean = false;
-  private currentStream: AsyncGenerator | null = null;
+  private currentStream: AsyncGenerator<GenerateContentResponse> | null = null;
   private config: GeminiLiveConfig;
   private audioContext: AudioContext | null = null;
 
@@ -22,31 +22,18 @@ export class GeminiLiveService {
     this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
   }
 
-  async initialize() {
-    try {
-      // Initialize Gemini model with multimodal capabilities
-      this.model = this.genAI!.getGenerativeModel({
-        model: 'gemini-2.0-flash-exp',
-        generationConfig: {
-          temperature: 1,
-          topP: 0.95,
-          topK: 40,
-          maxOutputTokens: 8192,
-        },
-      });
-    } catch (error) {
-      this.config.onError(error as Error);
-    }
+  async initialize(): Promise<void> {
+    this.isInitialized = true;
   }
 
   async processVoiceCommand(audioBlob: Blob, userPrompt: string) {
-    if (!this.model) {
-      throw new Error('Gemini model not initialized');
-    }
-
     this.isProcessing = true;
 
     try {
+      if (!this.isInitialized) {
+        throw new Error('Gemini model not initialized');
+      }
+
       // Convert audio blob to base64
       const audioData = await this.blobToBase64(audioBlob);
 
@@ -62,19 +49,29 @@ export class GeminiLiveService {
       ];
 
       // Generate streaming response
-      const result = await this.model.generateContentStream(parts);
-      this.currentStream = result.stream;
+      const stream = await this.genAI.models.generateContentStream({
+        model: 'gemini-2.0-flash-exp',
+        contents: [{ role: 'user', parts }],
+        config: {
+          temperature: 1,
+          topP: 0.95,
+          topK: 40,
+          maxOutputTokens: 8192,
+        },
+      });
+      this.currentStream = stream;
 
       let fullText = '';
       
-      for await (const chunk of result.stream) {
+      for await (const chunk of stream) {
         // Check if interrupted
         if (!this.isProcessing) {
           this.config.onInterrupted?.();
           break;
         }
 
-        const chunkText = chunk.text();
+        const chunkText = chunk.text ?? '';
+        if (!chunkText) continue;
         fullText += chunkText;
         this.config.onTextResponse(chunkText);
       }
@@ -85,38 +82,48 @@ export class GeminiLiveService {
       }
 
     } catch (error) {
-      this.config.onError(error as Error);
+      this.config.onError(this.toError(error));
     } finally {
       this.isProcessing = false;
     }
   }
 
   async processTextCommand(prompt: string) {
-    if (!this.model) {
-      throw new Error('Gemini model not initialized');
-    }
-
     this.isProcessing = true;
 
     try {
-      const result = await this.model.generateContentStream(prompt);
-      this.currentStream = result.stream;
+      if (!this.isInitialized) {
+        throw new Error('Gemini model not initialized');
+      }
+
+      const stream = await this.genAI.models.generateContentStream({
+        model: 'gemini-2.0-flash-exp',
+        contents: prompt,
+        config: {
+          temperature: 1,
+          topP: 0.95,
+          topK: 40,
+          maxOutputTokens: 8192,
+        },
+      });
+      this.currentStream = stream;
 
       let fullText = '';
       
-      for await (const chunk of result.stream) {
+      for await (const chunk of stream) {
         if (!this.isProcessing) {
           this.config.onInterrupted?.();
           break;
         }
 
-        const chunkText = chunk.text();
+        const chunkText = chunk.text ?? '';
+        if (!chunkText) continue;
         fullText += chunkText;
         this.config.onTextResponse(chunkText);
       }
 
     } catch (error) {
-      this.config.onError(error as Error);
+      this.config.onError(this.toError(error));
     } finally {
       this.isProcessing = false;
     }
@@ -140,6 +147,10 @@ export class GeminiLiveService {
       reader.onerror = reject;
       reader.readAsDataURL(blob);
     });
+  }
+
+  private toError(error: unknown): Error {
+    return error instanceof Error ? error : new Error(String(error));
   }
 
   // Synthesize speech from text (using Web Speech API)
