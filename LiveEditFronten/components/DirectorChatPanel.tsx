@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 interface UploadOption {
   id: string;
@@ -44,11 +44,52 @@ const DirectorChatPanel: React.FC<DirectorChatPanelProps> = ({
   latestPlan,
   busy,
 }) => {
+  const [isCollapsed, setIsCollapsed] = useState(true);
+
+  if (isCollapsed) {
+    return (
+      <aside
+        id="ai-director-panel"
+        className="w-12 min-w-12 border-l border-neutral-800 bg-[#111] flex flex-col items-center py-3"
+      >
+        <button
+          type="button"
+          onClick={() => setIsCollapsed(false)}
+          aria-label="Expand AI Director"
+          aria-expanded={false}
+          aria-controls="ai-director-panel"
+          title="Expand AI Director"
+          className="flex flex-col items-center gap-3 text-cyan-400 hover:text-white transition-colors"
+        >
+          <i className="fas fa-chevron-left text-xs" aria-hidden="true"></i>
+          <i className="fas fa-comments" aria-hidden="true"></i>
+          <span className="[writing-mode:vertical-rl] rotate-180 text-[10px] font-bold uppercase tracking-widest">
+            AI Director
+          </span>
+        </button>
+      </aside>
+    );
+  }
+
   return (
-    <div className="w-96 border-l border-neutral-800 bg-[#111] flex flex-col overflow-hidden">
+    <aside
+      id="ai-director-panel"
+      className="w-96 min-w-96 border-l border-neutral-800 bg-[#111] flex flex-col overflow-hidden"
+    >
       <div className="px-4 py-3 border-b border-neutral-800 flex items-center gap-3">
         <i className="fas fa-comments text-cyan-400"></i>
         <h3 className="text-sm font-bold uppercase tracking-wide text-white">AI Director</h3>
+        <button
+          type="button"
+          onClick={() => setIsCollapsed(true)}
+          aria-label="Collapse AI Director"
+          aria-expanded={true}
+          aria-controls="ai-director-panel"
+          title="Collapse AI Director"
+          className="ml-auto text-neutral-400 hover:text-white transition-colors"
+        >
+          <i className="fas fa-chevron-right" aria-hidden="true"></i>
+        </button>
       </div>
 
       <div className="p-4 border-b border-neutral-800 space-y-3">
@@ -139,7 +180,7 @@ const DirectorChatPanel: React.FC<DirectorChatPanelProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </aside>
   );
 };
 
