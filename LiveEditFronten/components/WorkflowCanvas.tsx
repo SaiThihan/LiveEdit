@@ -17,6 +17,7 @@ import '@xyflow/react/dist/style.css';
 import { v4 as uuidv4 } from 'uuid';
 import { nodeTypes } from './WorkflowNodes';
 import DirectorChatPanel from './DirectorChatPanel';
+import ThemeToggle from './ThemeToggle';
 import type { Scene } from '../services/videoIngestion';
 import { useToast } from '../context/ToastContext';
 
@@ -652,7 +653,7 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ projectId, onBack }) =>
   return (
     <div className="h-screen w-full bg-[#0a0a0a] flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="h-14 border-b border-neutral-800 bg-[#111] flex items-center justify-between px-4 z-50">
+      <div className="min-h-14 border-b border-neutral-800 bg-[#111] flex flex-wrap items-center justify-between gap-2 px-2 py-1 z-50 sm:px-4">
         <div className="flex items-center gap-4">
           <button
             onClick={onBack}
@@ -667,7 +668,8 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ projectId, onBack }) =>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <ThemeToggle />
           {/* Voice Control Button */}
           <button
             onClick={toggleVoice}

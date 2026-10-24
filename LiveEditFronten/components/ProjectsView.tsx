@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import ThemeToggle from './ThemeToggle';
 
 interface Project {
   id: string;
@@ -124,13 +125,16 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ userEmail, onOpenProject, o
             </button>
             <h1 className="text-2xl font-bold text-white">Projects</h1>
           </div>
-          <button
-            onClick={() => setIsCreatingProject(true)}
-            className="px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-white bg-[#00ff41] hover:bg-[#00dd35] transition-all"
-          >
-            <i className="fas fa-plus mr-2"></i>
-            New Project
-          </button>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <button
+              onClick={() => setIsCreatingProject(true)}
+              className="px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-white bg-[#00ff41] hover:bg-[#00dd35] transition-all"
+            >
+              <i className="fas fa-plus mr-2"></i>
+              New Project
+            </button>
+          </div>
         </div>
       </div>
 
