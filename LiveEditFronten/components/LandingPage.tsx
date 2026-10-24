@@ -146,6 +146,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                   <span className="text-neutral-400">{formattedGithubStars}</span>
                 </span>
               </a>
+              <ThemeToggle />
             </div>
           </div>
         </div>

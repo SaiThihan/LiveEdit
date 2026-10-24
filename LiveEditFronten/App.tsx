@@ -160,16 +160,26 @@ const App: React.FC = () => {
   };
 
   if (!isLogtoInitialized) {
-    return <div className="min-h-screen bg-[#050505]" />;
+    return (
+      <div className="relative min-h-screen bg-[#050505]">
+        <div className="absolute right-4 top-4 z-[100]"><ThemeToggle /></div>
+      </div>
+    );
   }
 
   if (isAuthenticated && !userEmail && !authError) {
-    return <div className="min-h-screen bg-[#050505] text-white flex items-center justify-center">Signing in…</div>;
+    return (
+      <div className="relative min-h-screen bg-[#050505] text-white flex items-center justify-center">
+        <div className="absolute right-4 top-4 z-[100]"><ThemeToggle /></div>
+        Signing in…
+      </div>
+    );
   }
 
   if (authError) {
     return (
-      <div className="min-h-screen bg-[#050505] text-white flex flex-col items-center justify-center gap-4 p-6 text-center">
+      <div className="relative min-h-screen bg-[#050505] text-white flex flex-col items-center justify-center gap-4 p-6 text-center">
+        <div className="absolute right-4 top-4 z-[100]"><ThemeToggle /></div>
         <p>{authError}</p>
         <button onClick={() => void signOut(`${window.location.origin}/`)} className="text-[#00ff41] underline">Sign out and try again</button>
       </div>
@@ -181,7 +191,12 @@ const App: React.FC = () => {
   }
 
   if (showLanding && showAuthForm && !isAuthenticated) {
-    return <AuthForm onClose={() => setShowAuthForm(false)} />;
+    return (
+      <>
+        <div className="fixed right-4 top-4 z-[100]"><ThemeToggle /></div>
+        <AuthForm onClose={() => setShowAuthForm(false)} />
+      </>
+    );
   }
 
   if (currentProjectId && !showProjects) {
@@ -206,14 +221,17 @@ const App: React.FC = () => {
   if (showSubscriptionPlans) {
     return (
       <div className="min-h-screen editor-bg">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-800">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-b border-neutral-800">
           <h1 className="text-2xl font-bold">Subscription Plans</h1>
-          <button
-            onClick={() => setShowSubscriptionPlans(false)}
-            className="px-4 py-2 text-sm text-neutral-400 hover:text-white transition-colors"
-          >
-            ← Back to App
-          </button>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <button
+              onClick={() => setShowSubscriptionPlans(false)}
+              className="px-4 py-2 text-sm text-neutral-400 hover:text-white transition-colors"
+            >
+              ← Back to App
+            </button>
+          </div>
         </div>
         <SubscriptionPlans
           userEmail={userEmail}
@@ -258,7 +276,7 @@ const App: React.FC = () => {
           </nav>
         </div>
 
-        <div className="flex w-full items-center justify-end gap-2 overflow-x-auto md:w-auto md:gap-3">
+        <div className="flex w-full flex-wrap items-center justify-end gap-2 md:w-auto md:gap-3">
           <div className="flex shrink-0 items-center gap-2 rounded border border-neutral-800 bg-neutral-900 px-2 py-0.5 font-mono text-[10px]">
             <span className="text-[8px] text-neutral-500">USER:</span>
             <span className="text-[10px] text-neutral-300 max-w-[120px] truncate">{userEmail}</span>
